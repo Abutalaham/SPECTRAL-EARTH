@@ -30,12 +30,12 @@ const features: FeatureItem[] = [
 ];
 
 function FeatureCard({ feature, index }: { feature: FeatureItem; index: number }) {
-  const cardRef = useTilt<HTMLDivElement>(4);
+  const cardRef = useTilt<HTMLDivElement>(3);
 
   return (
     <div
       ref={cardRef}
-      className="group relative rounded-2xl border border-emerald-500/20 bg-gradient-to-b from-[#13231b]/90 to-[#0c1712]/90 p-7 shadow-xl shadow-black/40 backdrop-blur-sm transition-shadow duration-300 hover:border-emerald-400/40 hover:shadow-emerald-950/40"
+      className="group relative rounded-2xl border border-emerald-300/20 bg-gradient-to-b from-[#10251D]/95 to-[#0A1914]/95 p-7 shadow-xl shadow-black/40 transition-[border-color,box-shadow] duration-300 hover:border-cyan-300/35 hover:shadow-emerald-950/40 motion-reduce:transition-none"
       style={{
         transformStyle: "preserve-3d",
       }}
@@ -69,18 +69,18 @@ export function FeaturesSection() {
   return (
     <section
       id="features"
-      className="relative overflow-hidden bg-[#09110d] px-6 py-28 text-foreground"
+      className="relative overflow-hidden bg-[#06110E] px-6 py-28 text-foreground"
     >
       {/* Quantum Engine Layered Background: Coordinate Grid & Orbital Rings */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(16,185,129,0.08)_0%,_transparent_65%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_22%_18%,rgba(57,221,245,0.08),transparent_38%),radial-gradient(ellipse_at_78%_82%,rgba(66,245,155,0.09),transparent_42%),radial-gradient(circle_at_center,rgba(16,185,129,0.07),transparent_65%)]" />
 
       {/* Subtle coordinate grid lines */}
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.035]"
         style={{
           backgroundImage: `
-            linear-gradient(to right, #34d399 1px, transparent 1px),
-            linear-gradient(to bottom, #34d399 1px, transparent 1px)
+            linear-gradient(to right, #39DDF5 1px, transparent 1px),
+            linear-gradient(to bottom, #42F59B 1px, transparent 1px)
           `,
           backgroundSize: "60px 60px",
         }}
@@ -96,10 +96,14 @@ export function FeaturesSection() {
         className="pointer-events-none absolute left-1/2 top-1/2 h-[32rem] w-[32rem] -translate-x-1/2 -translate-y-1/2 rounded-full border border-dashed border-emerald-500/10 [mask-image:radial-gradient(circle,black_30%,transparent_70%)]"
         aria-hidden="true"
       />
+      <div
+        className="pointer-events-none absolute left-1/2 top-[48%] h-[22rem] w-[52rem] -translate-x-1/2 -translate-y-1/2 rotate-[-18deg] rounded-[50%] border border-cyan-300/[0.07] [mask-image:linear-gradient(to_bottom,transparent,black,transparent)]"
+        aria-hidden="true"
+      />
 
       <div className="relative mx-auto max-w-6xl">
         <div className="flex items-center gap-2">
-          <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
+          <span className="h-1.5 w-1.5 rounded-full bg-accent motion-safe:animate-pulse" />
           <p className="font-mono text-xs uppercase tracking-widest text-primary">Quantum Engine // Core Capabilities</p>
         </div>
 

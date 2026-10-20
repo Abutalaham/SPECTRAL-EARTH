@@ -6,6 +6,7 @@ import { Slider } from "@/components/ui/slider";
 import { UploadPanel } from "@/components/analysis/UploadPanel";
 import { ResultsDashboard } from "@/components/analysis/ResultsDashboard";
 import { SpectralAnalysisView } from "@/components/analysis/SpectralAnalysisView";
+import { ParticleConstellation } from "@/components/ui/ParticleConstellation";
 import { loadImageFile, revokeResult, runAnalysis, validateFile } from "@/lib/analysis/engine";
 import { makeSampleFiles } from "@/lib/analysis/samples";
 import type { AnalysisResult, LoadedImage } from "@/lib/analysis/types";
@@ -117,7 +118,8 @@ function Workspace() {
         </p>
       </aside>
 
-      <main className="mx-auto w-full max-w-6xl space-y-8 px-4 py-6 md:px-8 md:py-10">
+      <main className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-10">
+        <ParticleConstellation className="space-y-8">
         <header className="space-y-4">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
@@ -215,6 +217,7 @@ function Workspace() {
             </section>
           </div>
         )}
+        </ParticleConstellation>
       </main>
     </div>
   );

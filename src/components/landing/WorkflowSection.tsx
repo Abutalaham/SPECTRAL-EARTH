@@ -40,13 +40,18 @@ export function WorkflowSection() {
   return (
     <section
       id="workflow"
-      className="relative border-y border-emerald-500/15 bg-gradient-to-b from-[#09110d] via-[#0b1611] to-[#09110d] px-6 py-28"
+      className="relative isolate overflow-hidden border-y border-emerald-300/15 bg-[radial-gradient(ellipse_at_50%_0%,rgba(57,221,245,0.07),transparent_44%),linear-gradient(180deg,#06110E_0%,#0A1914_52%,#06110E_100%)] px-6 py-28"
     >
-      {/* Background ambient lighting */}
       <div
-        className="pointer-events-none absolute left-1/4 top-1/3 h-80 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-500/5 blur-3xl"
+        className="pointer-events-none absolute inset-0 opacity-[0.035]"
+        style={{
+          backgroundImage:
+            "linear-gradient(to right, #39DDF5 1px, transparent 1px), linear-gradient(to bottom, #42F59B 1px, transparent 1px)",
+          backgroundSize: "72px 72px",
+        }}
         aria-hidden="true"
       />
+      <div className="pointer-events-none absolute left-1/4 top-1/3 hidden h-80 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-400/[0.04] blur-3xl md:block" aria-hidden="true" />
 
       <div className="relative mx-auto max-w-6xl">
         <div className="flex items-center gap-2">
@@ -66,9 +71,9 @@ export function WorkflowSection() {
           {steps.map((s, i) => (
             <li
               key={s.title}
-              className="group relative flex flex-col justify-between rounded-2xl border border-emerald-500/25 bg-[#0f1d16]/70 p-6 shadow-xl shadow-black/30 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-emerald-400/50 hover:shadow-emerald-950/30"
+              className="group relative flex flex-col justify-between rounded-2xl border border-emerald-300/20 bg-[#10251D]/90 p-6 shadow-xl shadow-black/30 transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-1 hover:border-cyan-300/35 hover:shadow-emerald-950/30 motion-reduce:transform-none motion-reduce:transition-none md:bg-[#10251D]/75 md:backdrop-blur-md max-md:backdrop-blur-none"
               style={{
-                boxShadow: "inset 0 1px 1px 0 rgba(255, 255, 255, 0.08), 0 10px 25px -5px rgba(0, 0, 0, 0.4)",
+                boxShadow: "inset 0 1px 1px 0 rgba(167, 255, 224, 0.08), 0 12px 28px -8px rgba(0, 0, 0, 0.48)",
               }}
             >
               {/* Step indicator header */}

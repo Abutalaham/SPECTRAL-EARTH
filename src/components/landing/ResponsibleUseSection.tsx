@@ -5,19 +5,18 @@ export function ResponsibleUseSection() {
   const cardRef = useTilt<HTMLDivElement>(2.5);
 
   return (
-    <section className="relative overflow-hidden bg-[#09110d] px-6 py-24">
-      {/* Soft emerald/lime ambient halo */}
+    <section className="relative overflow-hidden bg-[#06110E] px-6 py-24">
       <div
-        className="pointer-events-none absolute left-1/2 top-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent/5 blur-3xl"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_50%,rgba(66,245,155,0.09),transparent_58%),radial-gradient(ellipse_at_10%_10%,rgba(57,221,245,0.05),transparent_42%)]"
         aria-hidden="true"
       />
 
       <div className="relative mx-auto max-w-5xl">
         <div
           ref={cardRef}
-          className="group relative rounded-2xl border border-accent/30 bg-[#0c1611]/90 p-8 shadow-2xl backdrop-blur-md transition-all duration-300 md:p-10"
+          className="group relative rounded-2xl border border-emerald-300/25 bg-[#0A1914]/95 p-8 shadow-2xl transition-[border-color,box-shadow] duration-300 hover:border-cyan-300/35 motion-reduce:transition-none md:p-10"
           style={{
-            boxShadow: "0 20px 40px -15px rgba(0, 0, 0, 0.6), inset 0 1px 1px 0 rgba(255, 255, 255, 0.1)",
+            boxShadow: "0 20px 40px -15px rgba(0, 0, 0, 0.6), inset 0 1px 1px 0 rgba(167, 255, 224, 0.09)",
           }}
         >
           {/* Subtle Kinetic Specular Light Following Pointer on Desktop */}
@@ -25,7 +24,7 @@ export function ResponsibleUseSection() {
             className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
             style={{
               background:
-                "radial-gradient(500px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(190, 242, 100, 0.08), transparent 70%)",
+                "radial-gradient(500px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(57, 221, 245, 0.08), transparent 70%)",
             }}
             aria-hidden="true"
           />
