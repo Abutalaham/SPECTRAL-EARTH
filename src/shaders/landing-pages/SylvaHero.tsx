@@ -13,7 +13,7 @@ export const SYLVA_HERO_VARIANTS = ["living-green"] as const;
 export type SylvaHeroVariant = (typeof SYLVA_HERO_VARIANTS)[number];
 export type SylvaHeroProps = LandingPageProps & PageTypographyProps & { variant?: SylvaHeroVariant };
 
-const SYLVA_HERO_BASE_URL = "/landing-pages/inner-green-3d.html";
+const SYLVA_HERO_BASE_URL = `${import.meta.env.BASE_URL.replace(/\/$/, "")}/landing-pages/inner-green-3d.html`;
 
 export function SylvaHero({ variant = "living-green", ...props }: SylvaHeroProps) {
   const [type, frame] = splitTypographyProps(props);
