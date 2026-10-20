@@ -1,14 +1,38 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ClientOnly, useNavigate } from "@tanstack/react-router";
 import { SylvaHero } from "@/shaders/landing-pages/SylvaHero";
+import { useDeviceCapabilities } from "@/hooks/useDeviceCapabilities";
+import { StaticHeroFallback } from "./StaticHeroFallback";
 
 /**
  * Full-screen SylvaHero (Living Green). The authored page file stays
  * byte-exact; Spectral Earth copy and navigation are applied to the live
  * same-origin frame after it loads.
+ *
+ * Performance-optimized:
+ * - On mobile/touch and prefers-reduced-motion, loads lightweight StaticHeroFallback.
+ * - On capable desktops, uses IntersectionObserver to pause rendering when scrolled out of view.
  */
 export function HeroSection() {
   const navigate = useNavigate();
+  const { canRun3DHero } = useDeviceCapabilities();
+  const containerRef = useRef<HTMLElement>(null);
+  const [isVisible, setIsVisible] = useState(true);
+
+  // Intersection observer to freeze/hide WebGL frame when scrolled offscreen
+  useEffect(() => {
+    if (!canRun3DHero || !containerRef.current) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsVisible(entry?.isIntersecting ?? true);
+      },
+      { threshold: 0.05 },
+    );
+
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, [canRun3DHero]);
 
   const applyScene = useCallback(
     function apply(frame: HTMLIFrameElement) {
@@ -77,23 +101,34 @@ export function HeroSection() {
     [navigate],
   );
 
+  // Mobile / touch / reduced-motion fallback
+  if (!canRun3DHero) {
+    return <StaticHeroFallback />;
+  }
+
   return (
-    <section className="relative h-[100svh] w-full" aria-label="Spectral Earth introduction">
-      <div className="shader-frame absolute inset-0">
+    <section ref={containerRef} className="relative h-[100svh] w-full" aria-label="Spectral Earth introduction">
+      <div
+        className="shader-frame absolute inset-0 transition-opacity duration-300"
+        style={{
+          visibility: isVisible ? "visible" : "hidden",
+          pointerEvents: isVisible ? "auto" : "none",
+        }}
+      >
         <ClientOnly fallback={<div className="h-full w-full bg-background" />}>
-        <SylvaHero
-          variant="living-green"
-          headingFont="lexend"
-          bodyFont="lexend"
-          headingWeight="300"
-          bodyWeight="300"
-          primaryColor="#ffffff"
-          headingSize={63}
-          bodySize={16.5}
-          headingLetterSpacing={-0.006}
-          applyScene={applyScene}
-          style={{ width: "100%", height: "100%" }}
-        />
+          <SylvaHero
+            variant="living-green"
+            headingFont="lexend"
+            bodyFont="lexend"
+            headingWeight="300"
+            bodyWeight="300"
+            primaryColor="#ffffff"
+            headingSize={63}
+            bodySize={16.5}
+            headingLetterSpacing={-0.006}
+            applyScene={applyScene}
+            style={{ width: "100%", height: "100%" }}
+          />
         </ClientOnly>
       </div>
     </section>

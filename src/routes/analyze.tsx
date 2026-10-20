@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Loader2, Play, RotateCcw, Sparkles, Lock, Home, ScanSearch, Info } from "lucide-react";
+import { Loader2, Play, RotateCcw, Sparkles, Lock, Home, ScanSearch, Info, Satellite, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { UploadPanel } from "@/components/analysis/UploadPanel";
 import { ResultsDashboard } from "@/components/analysis/ResultsDashboard";
+import { SpectralAnalysisView } from "@/components/analysis/SpectralAnalysisView";
 import { loadImageFile, revokeResult, runAnalysis, validateFile } from "@/lib/analysis/engine";
 import { makeSampleFiles } from "@/lib/analysis/samples";
 import type { AnalysisResult, LoadedImage } from "@/lib/analysis/types";
@@ -24,8 +25,10 @@ export const Route = createFileRoute("/analyze")({
 });
 
 type Slot = "before" | "after";
+type AnalysisMode = "rgb" | "spectral";
 
 function Workspace() {
+  const [mode, setMode] = useState<AnalysisMode>("rgb");
   const [images, setImages] = useState<Record<Slot, LoadedImage | null>>({ before: null, after: null });
   const [errors, setErrors] = useState<Record<Slot, string | null>>({ before: null, after: null });
   const [sensitivity, setSensitivity] = useState(50);
@@ -115,66 +118,103 @@ function Workspace() {
       </aside>
 
       <main className="mx-auto w-full max-w-6xl space-y-8 px-4 py-6 md:px-8 md:py-10">
-        <header className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-light">Analysis workspace</h1>
-            <p className="text-sm text-muted-foreground">Upload two images of the same location captured at different times.</p>
-          </div>
-          <Button variant="outline" onClick={loadSamples}><Sparkles /> Load synthetic samples</Button>
-        </header>
-
-        <section aria-labelledby="upload-h" className="space-y-4">
-          <h2 id="upload-h" className="text-sm uppercase tracking-widest text-primary">1 · Images</h2>
-          <div className="grid gap-4 md:grid-cols-2">
-            <UploadPanel label="Earlier image" hint="Baseline" image={images.before} error={errors.before} onFile={(f) => setSlot("before", f)} onRemove={() => remove("before")} />
-            <UploadPanel label="Later image" hint="Comparison" image={images.after} error={errors.after} onFile={(f) => setSlot("after", f)} onRemove={() => remove("after")} />
-          </div>
-          <div className="flex gap-3 rounded-lg border bg-card p-4 text-xs text-muted-foreground">
-            <Info className="h-4 w-4 shrink-0 text-accent" />
-            <p>
-              Accurate change detection requires images of the same location, comparable resolution, good alignment and similar capture conditions.
-              Both images are fitted to a common canvas (preserving aspect ratio); no geographic registration is performed.
-              {aspectMismatch && <strong className="block pt-1 text-accent">These images have different aspect ratios — only the overlapping area will be analyzed.</strong>}
-              {" "}The synthetic samples are computer-drawn scenes, not real satellite imagery.
-            </p>
-          </div>
-        </section>
-
-        <section aria-labelledby="settings-h" className="space-y-4">
-          <h2 id="settings-h" className="text-sm uppercase tracking-widest text-primary">2 · Settings</h2>
-          <div className="rounded-xl border bg-card p-5">
-            <div className="flex items-center justify-between">
-              <label id="sens-label" className="font-medium">Sensitivity</label>
-              <span className="tabular-nums text-lg">{sensitivity}</span>
+        <header className="space-y-4">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h1 className="text-2xl font-light">Analysis workspace</h1>
+              <p className="text-sm text-muted-foreground">Select an analysis mode to begin your environmental investigation.</p>
             </div>
-            <Slider className="mt-4" min={1} max={100} step={1} value={[sensitivity]} onValueChange={(v) => setSensitivity(v[0] ?? 50)} aria-labelledby="sens-label" />
-            <p className="mt-3 text-xs text-muted-foreground">
-              Higher sensitivity detects smaller pixel differences and may increase false positives. Rerun the analysis after changing it.
-            </p>
-            <div className="mt-5 flex flex-wrap gap-2">
-              <Button onClick={run} disabled={!ready || running}>
-                {running ? <Loader2 className="animate-spin" /> : <Play />} {running ? "Analyzing…" : "Run Analysis"}
-              </Button>
-              <Button variant="ghost" onClick={reset} disabled={running}><RotateCcw /> Reset Analysis</Button>
-            </div>
-            {!ready && <p className="mt-3 text-xs text-muted-foreground">Add both images to enable analysis.</p>}
-            {runError && <p role="alert" className="mt-3 text-sm text-destructive">{runError}</p>}
-            {result && result.sensitivity !== sensitivity && (
-              <p className="mt-3 text-xs text-accent">Sensitivity changed — run the analysis again to update the results.</p>
+            {mode === "rgb" && (
+              <Button variant="outline" onClick={loadSamples}><Sparkles /> Load synthetic samples</Button>
             )}
           </div>
-        </section>
 
-        <section ref={resultsRef} aria-labelledby="results-h" className="scroll-mt-20 space-y-4">
-          <h2 id="results-h" className="text-sm uppercase tracking-widest text-primary">3 · Results</h2>
-          {result ? (
-            <ResultsDashboard result={result} />
-          ) : (
-            <div className="rounded-xl border border-dashed p-10 text-center text-sm text-muted-foreground">
-              Results appear here after you run an analysis.
-            </div>
-          )}
-        </section>
+          {/* Mode Selector Tabs */}
+          <div className="inline-flex rounded-xl border border-emerald-500/25 bg-card p-1 shadow-sm">
+            <button
+              onClick={() => setMode("rgb")}
+              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-medium transition-all ${
+                mode === "rgb"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <ImageIcon className="h-3.5 w-3.5" />
+              <span>Mode A: RGB Image Comparison</span>
+            </button>
+
+            <button
+              onClick={() => setMode("spectral")}
+              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-medium transition-all ${
+                mode === "spectral"
+                  ? "bg-accent text-accent-foreground shadow-sm font-semibold"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Satellite className="h-3.5 w-3.5" />
+              <span>Mode B: Sentinel-2 Spectral NDVI (Beta)</span>
+            </button>
+          </div>
+        </header>
+
+        {mode === "spectral" ? (
+          <SpectralAnalysisView />
+        ) : (
+          <div className="space-y-8">
+            <section aria-labelledby="upload-h" className="space-y-4">
+              <h2 id="upload-h" className="text-sm uppercase tracking-widest text-primary">1 · Images</h2>
+              <div className="grid gap-4 md:grid-cols-2">
+                <UploadPanel label="Earlier image" hint="Baseline" image={images.before} error={errors.before} onFile={(f) => setSlot("before", f)} onRemove={() => remove("before")} />
+                <UploadPanel label="Later image" hint="Comparison" image={images.after} error={errors.after} onFile={(f) => setSlot("after", f)} onRemove={() => remove("after")} />
+              </div>
+              <div className="flex gap-3 rounded-lg border bg-card p-4 text-xs text-muted-foreground">
+                <Info className="h-4 w-4 shrink-0 text-accent" />
+                <p>
+                  Accurate change detection requires images of the same location, comparable resolution, good alignment and similar capture conditions.
+                  Both images are fitted to a common canvas (preserving aspect ratio); no geographic registration is performed.
+                  {aspectMismatch && <strong className="block pt-1 text-accent">These images have different aspect ratios — only the overlapping area will be analyzed.</strong>}
+                  {" "}The synthetic samples are computer-drawn scenes, not real satellite imagery.
+                </p>
+              </div>
+            </section>
+
+            <section aria-labelledby="settings-h" className="space-y-4">
+              <h2 id="settings-h" className="text-sm uppercase tracking-widest text-primary">2 · Settings</h2>
+              <div className="rounded-xl border bg-card p-5">
+                <div className="flex items-center justify-between">
+                  <label id="sens-label" className="font-medium">Sensitivity</label>
+                  <span className="tabular-nums text-lg">{sensitivity}</span>
+                </div>
+                <Slider className="mt-4" min={1} max={100} step={1} value={[sensitivity]} onValueChange={(v) => setSensitivity(v[0] ?? 50)} aria-labelledby="sens-label" />
+                <p className="mt-3 text-xs text-muted-foreground">
+                  Higher sensitivity detects smaller pixel differences and may increase false positives. Rerun the analysis after changing it.
+                </p>
+                <div className="mt-5 flex flex-wrap gap-2">
+                  <Button onClick={run} disabled={!ready || running}>
+                    {running ? <Loader2 className="animate-spin" /> : <Play />} {running ? "Analyzing…" : "Run Analysis"}
+                  </Button>
+                  <Button variant="ghost" onClick={reset} disabled={running}><RotateCcw /> Reset Analysis</Button>
+                </div>
+                {!ready && <p className="mt-3 text-xs text-muted-foreground">Add both images to enable analysis.</p>}
+                {runError && <p role="alert" className="mt-3 text-sm text-destructive">{runError}</p>}
+                {result && result.sensitivity !== sensitivity && (
+                  <p className="mt-3 text-xs text-accent">Sensitivity changed — run the analysis again to update the results.</p>
+                )}
+              </div>
+            </section>
+
+            <section ref={resultsRef} aria-labelledby="results-h" className="scroll-mt-20 space-y-4">
+              <h2 id="results-h" className="text-sm uppercase tracking-widest text-primary">3 · Results</h2>
+              {result ? (
+                <ResultsDashboard result={result} />
+              ) : (
+                <div className="rounded-xl border border-dashed p-10 text-center text-sm text-muted-foreground">
+                  Results appear here after you run an analysis.
+                </div>
+              )}
+            </section>
+          </div>
+        )}
       </main>
     </div>
   );
