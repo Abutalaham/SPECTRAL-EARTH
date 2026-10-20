@@ -111,7 +111,7 @@ Always use **Level-2A (Bottom-of-Atmosphere)** surface reflectance products for 
 
 An in-app step-by-step guide is also available by clicking **How to get Sentinel-2 Data** in Mode B.
 
-A **calibrated synthetic sample dataset** (128×128, 10m simulated Sentinel-2 reflectances with water body, road, agricultural field, and forest features) is also built in — click **Load Calibrated Sample** to explore the interface immediately.
+A **synthetic sample dataset** (128×128 generated values with example water, road, field, and forest patterns) is built in — click **Load Synthetic Sample** to explore the interface immediately. It is not calibrated, georeferenced, or derived from Sentinel-2 observations, and its results must not be interpreted as real-world measurements. Area estimates are intentionally unavailable for this sample.
 
 #### NDVI Interpretation
 
@@ -156,11 +156,11 @@ bun run test
 
 | Suite | Tests |
 |---|---|
-| `difference.test.ts` | 4 — RGB pixel difference algorithm |
-| `ndvi.test.ts` | 12 — NDVI pixel, raster, difference, NoData, colormap |
+| `difference.test.ts` | 5 — RGB pixel difference algorithm |
+| `ndvi.test.ts` | 15 — NDVI pixel, raster, difference, NoData, colormap |
 | `app-routing.test.tsx` | 1 — Router renders landing page |
 
-All 17 tests pass.
+All 21 tests pass.
 
 ---
 

@@ -1,8 +1,8 @@
 import { ParsedBand } from "./ndvi";
 
 /**
- * Creates a calibrated Sentinel-2 Level-2A sample dataset (128x128 pixels at 10m ground resolution).
- * Simulates a verified environmental scenario:
+ * Creates synthetic example band values to demonstrate the NDVI workflow.
+ * These are not calibrated measurements or observations from a real location:
  *   - Observation A (June): Peak Summer Canopy (high NDVI 0.65 - 0.85).
  *   - Observation B (September): Post-Harvest / Canopy Senescence with a central agricultural field transition.
  *   - Water reservoir (negative NDVI ~ -0.45).
@@ -79,13 +79,11 @@ export function generateSampleSentinelBands(): {
     width,
     height,
     samplesPerPixel: 1,
-    pixelScaleMeters: 10, // 10m Sentinel-2 ground sampling distance
-    crs: "EPSG:32632 (WGS 84 / UTM zone 32N)",
   };
 
   return {
     earlierRed: {
-      fileName: "T32TMR_20260615T102021_B04_10m.jp2.tif",
+      fileName: "SYNTHETIC_SAMPLE_earlier_B04_red.tif",
       fileSize: 32768,
       width,
       height,
@@ -93,7 +91,7 @@ export function generateSampleSentinelBands(): {
       metadata: { ...metadata, date: "2026-06-15" },
     },
     earlierNir: {
-      fileName: "T32TMR_20260615T102021_B08_10m.jp2.tif",
+      fileName: "SYNTHETIC_SAMPLE_earlier_B08_nir.tif",
       fileSize: 32768,
       width,
       height,
@@ -101,7 +99,7 @@ export function generateSampleSentinelBands(): {
       metadata: { ...metadata, date: "2026-06-15" },
     },
     laterRed: {
-      fileName: "T32TMR_20260920T102021_B04_10m.jp2.tif",
+      fileName: "SYNTHETIC_SAMPLE_later_B04_red.tif",
       fileSize: 32768,
       width,
       height,
@@ -109,7 +107,7 @@ export function generateSampleSentinelBands(): {
       metadata: { ...metadata, date: "2026-09-20" },
     },
     laterNir: {
-      fileName: "T32TMR_20260920T102021_B08_10m.jp2.tif",
+      fileName: "SYNTHETIC_SAMPLE_later_B08_nir.tif",
       fileSize: 32768,
       width,
       height,

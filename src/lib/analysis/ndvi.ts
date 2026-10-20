@@ -28,6 +28,11 @@ export interface ParsedBand {
   metadata: GeoTiffMetadata;
 }
 
+export interface BandNoDataValues {
+  red: number | undefined;
+  nir: number | undefined;
+}
+
 export interface NdviSummaryStats {
   validPixels: number;
   invalidPixels: number;
@@ -85,10 +90,17 @@ export interface SpectralAnalysisResult {
  * Calculates a single NDVI value from Red and NIR reflectances.
  * Returns null if either value is invalid, NoData, or if the denominator is ~0.
  */
-export function computeNdviPixel(red: number, nir: number, noDataValue?: number): number | null {
+export function computeNdviPixel(
+  red: number,
+  nir: number,
+  noDataValue?: number | BandNoDataValues,
+): number | null {
   if (Number.isNaN(red) || Number.isNaN(nir)) return null;
   if (!Number.isFinite(red) || !Number.isFinite(nir)) return null;
-  if (noDataValue !== undefined && (red === noDataValue || nir === noDataValue)) return null;
+  const redNoDataValue = typeof noDataValue === "number" ? noDataValue : noDataValue?.red;
+  const nirNoDataValue = typeof noDataValue === "number" ? noDataValue : noDataValue?.nir;
+  if (redNoDataValue !== undefined && red === redNoDataValue) return null;
+  if (nirNoDataValue !== undefined && nir === nirNoDataValue) return null;
 
   // Sentinel-2 L2A zero reflectance is frequently used as swath/nodata
   if (red === 0 && nir === 0) return null;
@@ -113,7 +125,7 @@ export function computeNdviRaster(
   nir: Float32Array,
   width: number,
   height: number,
-  noDataValue?: number,
+  noDataValue?: number | BandNoDataValues,
 ): { ndvi: Float32Array; validMask: Uint8Array; stats: NdviSummaryStats } {
   const total = width * height;
   if (red.length !== total || nir.length !== total) {
@@ -238,7 +250,7 @@ export function computeNdviDifference(
       candidateLossPercent: valid > 0 ? (loss / valid) * 100 : 0,
       candidateGainPercent: valid > 0 ? (gain / valid) * 100 : 0,
       stablePercent: valid > 0 ? (stable / valid) * 100 : 0,
-      estimatedAreaKm2,
+      ...(estimatedAreaKm2 !== undefined ? { estimatedAreaKm2 } : {}),
     },
   };
 }
@@ -372,6 +384,9 @@ export async function parseGeoTiff(file: File): Promise<ParsedBand> {
   const width = image.getWidth();
   const height = image.getHeight();
   const samplesPerPixel = image.getSamplesPerPixel();
+  if (samplesPerPixel !== 1) {
+    throw new Error(`GeoTIFF "${file.name}" must contain exactly one raster band.`);
+  }
 
   // Read first band
   const rasters = await image.readRasters({ interleave: false });
@@ -381,22 +396,27 @@ export async function parseGeoTiff(file: File): Promise<ParsedBand> {
 
   const rawBand = rasters[0] as TypedArray;
   const total = width * height;
+  if (rawBand.length !== total) {
+    throw new Error(`GeoTIFF "${file.name}" has an incomplete raster band.`);
+  }
   const data = new Float32Array(total);
 
   for (let i = 0; i < total; i++) {
     data[i] = Number(rawBand[i]);
   }
 
-  const fileDir = image.getFileDirectory?.() || {};
-  let noDataValue: number | undefined;
-  if (typeof fileDir.GDAL_NODATA === "string") {
-    noDataValue = parseFloat(fileDir.GDAL_NODATA);
-  }
-
-  let pixelScaleMeters: number | undefined;
-  if (Array.isArray(fileDir.ModelPixelScaleTag) && fileDir.ModelPixelScaleTag.length > 0) {
-    pixelScaleMeters = fileDir.ModelPixelScaleTag[0];
-  }
+  const fileDir = image.getFileDirectory();
+  const scale = fileDir.getValue("ModelPixelScale")?.[0];
+  const geoKeys = image.getGeoKeys();
+  const pixelScaleMeters =
+    geoKeys?.GTModelTypeGeoKey === 1 &&
+    geoKeys.ProjLinearUnitsGeoKey === 9001 &&
+    scale !== undefined &&
+    Number.isFinite(scale) &&
+    scale > 0
+      ? scale
+      : undefined;
+  const noDataValue = image.getGDALNoData() ?? undefined;
 
   return {
     fileName: file.name,
@@ -408,9 +428,9 @@ export async function parseGeoTiff(file: File): Promise<ParsedBand> {
       width,
       height,
       samplesPerPixel,
-      bitsPerSample: Array.isArray(fileDir.BitsPerSample) ? fileDir.BitsPerSample[0] : undefined,
-      noDataValue,
-      pixelScaleMeters,
+      bitsPerSample: image.getBitsPerSample(),
+      ...(noDataValue !== undefined ? { noDataValue } : {}),
+      ...(pixelScaleMeters !== undefined ? { pixelScaleMeters } : {}),
     },
   };
 }

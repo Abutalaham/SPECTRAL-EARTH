@@ -85,7 +85,15 @@ export function SpectralResultsDashboard({ result }: SpectralResultsProps) {
       ["Candidate Gain Pixels", result.diff.stats.candidateGainPixels.toString(), `${result.diff.stats.candidateGainPercent.toFixed(1)}% of valid pixels`],
       ["Valid Compared Pixels", result.diff.stats.validPixels.toString(), `${result.diff.stats.validPercent.toFixed(1)}% of raster`],
       ["Invalid/NoData Pixels", result.diff.stats.invalidPixels.toString(), "Pixels skipped due to zero/NoData"],
-      ["Estimated Area Analyzed", result.diff.stats.estimatedAreaKm2 ? result.diff.stats.estimatedAreaKm2.toFixed(3) : "N/A", "km² (based on 10m GSD)"],
+      [
+        "Estimated Area Analyzed",
+        result.diff.stats.estimatedAreaKm2 !== undefined
+          ? result.diff.stats.estimatedAreaKm2.toFixed(3)
+          : "N/A",
+        result.pixelScaleMeters !== undefined
+          ? `km² (based on ${result.pixelScaleMeters}m pixels)`
+          : "Unavailable without a projected CRS in meters",
+      ],
     ];
 
     const csvContent = [headers.join(","), ...rows.map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(","))].join("\n");
@@ -286,7 +294,7 @@ export function SpectralResultsDashboard({ result }: SpectralResultsProps) {
             <span className="text-muted-foreground">Estimated Surface Area:</span>
             <p className="font-mono text-white">
               {result.diff.stats.estimatedAreaKm2 !== undefined
-                ? `${result.diff.stats.estimatedAreaKm2.toFixed(3)} km² (10m ground resolution)`
+                ? `${result.diff.stats.estimatedAreaKm2.toFixed(3)} km² (${result.pixelScaleMeters}m pixel scale)`
                 : "Exact area requires verified pixel scale tag"}
             </p>
           </div>

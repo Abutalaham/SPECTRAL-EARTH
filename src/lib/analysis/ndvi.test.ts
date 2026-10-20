@@ -35,6 +35,11 @@ describe("NDVI Pixel Calculation", () => {
     expect(ndvi).toBeNull();
   });
 
+  it("handles distinct NoData values for the red and NIR bands", () => {
+    const ndvi = computeNdviPixel(500, 9999, { red: -9999, nir: 9999 });
+    expect(ndvi).toBeNull();
+  });
+
   it("handles NaN or non-finite inputs", () => {
     expect(computeNdviPixel(NaN, 1500)).toBeNull();
     expect(computeNdviPixel(1500, Infinity)).toBeNull();
@@ -75,6 +80,19 @@ describe("NDVI Raster Calculation", () => {
     const nir = new Float32Array([1500]);
     expect(() => computeNdviRaster(red, nir, 2, 1)).toThrow("mismatch");
   });
+
+  it("applies the NoData value for each band independently", () => {
+    const result = computeNdviRaster(
+      new Float32Array([500, -9999]),
+      new Float32Array([3500, 9999]),
+      2,
+      1,
+      { red: -9999, nir: 9999 },
+    );
+
+    expect(result.stats.validPixels).toBe(1);
+    expect(result.validMask[1]).toBe(0);
+  });
 });
 
 describe("NDVI Difference Calculation", () => {
@@ -106,6 +124,19 @@ describe("NDVI Difference Calculation", () => {
 
     // Estimated area: 3 pixels * (10m * 10m) = 300 m² = 0.0003 km²
     expect(result.stats.estimatedAreaKm2).toBeCloseTo(0.0003, 5);
+  });
+
+  it("does not estimate area when pixel scale is unavailable", () => {
+    const result = computeNdviDifference(
+      new Float32Array([0.5]),
+      new Float32Array([0.4]),
+      new Uint8Array([1]),
+      new Uint8Array([1]),
+      1,
+      1,
+    );
+
+    expect(result.stats).not.toHaveProperty("estimatedAreaKm2");
   });
 });
 

@@ -100,7 +100,7 @@ export function StaticHeroFallback() {
 
       {/* Footer Scroll Prompt */}
       <footer className="relative z-10 flex items-center justify-between border-t border-emerald-500/10 pt-4 text-xs text-muted-foreground">
-        <span>Smooth 60 FPS mobile mode</span>
+        <span>Lightweight, WebGL-free mobile mode</span>
         <a href="#features" onClick={scrollToFeatures} className="inline-flex items-center gap-1 hover:text-foreground">
           Scroll down
           <ArrowRight className="h-3 w-3 rotate-90" />

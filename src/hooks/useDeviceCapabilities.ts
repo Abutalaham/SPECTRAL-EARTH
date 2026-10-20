@@ -17,17 +17,19 @@ export interface DeviceCapabilities {
   canRunTilt: boolean;
 }
 
+const DEFAULT_CAPABILITIES: DeviceCapabilities = {
+  isSmallScreen: false,
+  isTouchDevice: false,
+  prefersReducedMotion: false,
+  isSaveData: false,
+  isLowConcurrency: false,
+  canRun3DHero: false,
+  canRunTilt: false,
+};
+
 function checkCapabilities(): DeviceCapabilities {
   if (typeof window === "undefined") {
-    return {
-      isSmallScreen: false,
-      isTouchDevice: false,
-      prefersReducedMotion: false,
-      isSaveData: false,
-      isLowConcurrency: false,
-      canRun3DHero: true,
-      canRunTilt: true,
-    };
+    return DEFAULT_CAPABILITIES;
   }
 
   const isSmallScreen = window.innerWidth < 768 || window.matchMedia("(max-width: 768px)").matches;
@@ -56,7 +58,7 @@ function checkCapabilities(): DeviceCapabilities {
 }
 
 export function useDeviceCapabilities(): DeviceCapabilities {
-  const [capabilities, setCapabilities] = useState<DeviceCapabilities>(checkCapabilities);
+  const [capabilities, setCapabilities] = useState<DeviceCapabilities>(DEFAULT_CAPABILITIES);
 
   useEffect(() => {
     const update = () => setCapabilities(checkCapabilities());
@@ -78,6 +80,7 @@ export function useDeviceCapabilities(): DeviceCapabilities {
     addListener(widthQuery, update);
     addListener(pointerQuery, update);
     window.addEventListener("resize", update);
+    update();
 
     return () => {
       removeListener(motionQuery, update);

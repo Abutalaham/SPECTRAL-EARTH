@@ -77,8 +77,8 @@ function Workspace() {
     if (!images.before || !images.after || running) return;
     setRunning(true);
     setRunError(null);
-    // Yield one frame so the loading state paints before heavy work.
-    await new Promise((r) => requestAnimationFrame(() => r(null)));
+    // Yield briefly so the loading state can update without depending on a visible animation frame.
+    await new Promise((r) => setTimeout(r, 0));
     try {
       const r = await runAnalysis(images.before, images.after, sensitivity);
       replaceResult(r);

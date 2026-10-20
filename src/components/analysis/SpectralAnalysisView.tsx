@@ -58,6 +58,7 @@ export function SpectralAnalysisView() {
       else if (slot === "earlierNir") setEarlierNir(parsed);
       else if (slot === "laterRed") setLaterRed(parsed);
       else if (slot === "laterNir") setLaterNir(parsed);
+      setResult(null);
 
       // Auto-extract date from filename if follows Sentinel-2 pattern (e.g. 20260615)
       const dateMatch = file.name.match(/(\d{4})(\d{2})(\d{2})/);
@@ -75,6 +76,7 @@ export function SpectralAnalysisView() {
 
   const loadSampleData = () => {
     const samples = generateSampleSentinelBands();
+    setResult(null);
     setEarlierRed(samples.earlierRed);
     setEarlierNir(samples.earlierNir);
     setLaterRed(samples.laterRed);
@@ -131,33 +133,27 @@ export function SpectralAnalysisView() {
       await new Promise((r) => setTimeout(r, 40));
       if (controller.signal.aborted) return;
 
-      const earlierResult = computeNdviRaster(
-        earlierRed.data,
-        earlierNir.data,
-        W,
-        H,
-        earlierRed.metadata.noDataValue,
-      );
+      const earlierResult = computeNdviRaster(earlierRed.data, earlierNir.data, W, H, {
+        red: earlierRed.metadata.noDataValue,
+        nir: earlierNir.metadata.noDataValue,
+      });
 
       // Step 2: Calculate Later NDVI
       setProgressMsg(`Computing Comparison NDVI for ${laterDate}...`);
       await new Promise((r) => setTimeout(r, 40));
       if (controller.signal.aborted) return;
 
-      const laterResult = computeNdviRaster(
-        laterRed.data,
-        laterNir.data,
-        W,
-        H,
-        laterRed.metadata.noDataValue,
-      );
+      const laterResult = computeNdviRaster(laterRed.data, laterNir.data, W, H, {
+        red: laterRed.metadata.noDataValue,
+        nir: laterNir.metadata.noDataValue,
+      });
 
       // Step 3: Compute Difference
       setProgressMsg("Calculating ΔNDVI difference raster and vegetation shifts...");
       await new Promise((r) => setTimeout(r, 40));
       if (controller.signal.aborted) return;
 
-      const pixelScale = earlierRed.metadata.pixelScaleMeters || 10;
+      const pixelScale = earlierRed.metadata.pixelScaleMeters;
       const diffResult = computeNdviDifference(
         earlierResult.ndvi,
         laterResult.ndvi,
@@ -176,13 +172,16 @@ export function SpectralAnalysisView() {
         rasterToCanvasUrl(diffResult.diff, diffResult.validMask, W, H, ndviDiffToColor),
       ]);
 
-      if (controller.signal.aborted) return;
+      if (controller.signal.aborted) {
+        [earlierUrl, laterUrl, diffUrl].forEach((url) => URL.revokeObjectURL(url));
+        return;
+      }
 
       const newResult: SpectralAnalysisResult = {
         createdAt: new Date().toISOString(),
         width: W,
         height: H,
-        pixelScaleMeters: pixelScale,
+        ...(pixelScale !== undefined ? { pixelScaleMeters: pixelScale } : {}),
         earlierDate,
         laterDate,
         earlierFiles: {
@@ -266,7 +265,7 @@ export function SpectralAnalysisView() {
 
           <Button variant="outline" size="sm" onClick={loadSampleData} className="text-xs gap-1.5 border-emerald-500/30">
             <Sparkles className="h-3.5 w-3.5 text-primary" />
-            <span>Load Calibrated Sample</span>
+            <span>Load Synthetic Sample</span>
           </Button>
         </div>
       </div>
@@ -280,7 +279,10 @@ export function SpectralAnalysisView() {
             <input
               type="date"
               value={earlierDate}
-              onChange={(e) => setEarlierDate(e.target.value)}
+              onChange={(e) => {
+                setEarlierDate(e.target.value);
+                setResult(null);
+              }}
               className="rounded border border-border bg-background px-2 py-0.5 font-mono text-xs text-white"
             />
           </div>
@@ -295,7 +297,10 @@ export function SpectralAnalysisView() {
             error={errors["earlierRed"] ?? null}
             loading={loadingSlot === "earlierRed"}
             onFileSelect={(f) => handleFileUpload("earlierRed", f)}
-            onRemove={() => setEarlierRed(null)}
+            onRemove={() => {
+              setEarlierRed(null);
+              setResult(null);
+            }}
           />
           <SpectralUploadCard
             label="Baseline Near-Infrared Band"
@@ -305,7 +310,10 @@ export function SpectralAnalysisView() {
             error={errors["earlierNir"] ?? null}
             loading={loadingSlot === "earlierNir"}
             onFileSelect={(f) => handleFileUpload("earlierNir", f)}
-            onRemove={() => setEarlierNir(null)}
+            onRemove={() => {
+              setEarlierNir(null);
+              setResult(null);
+            }}
           />
         </div>
       </section>
@@ -319,7 +327,10 @@ export function SpectralAnalysisView() {
             <input
               type="date"
               value={laterDate}
-              onChange={(e) => setLaterDate(e.target.value)}
+              onChange={(e) => {
+                setLaterDate(e.target.value);
+                setResult(null);
+              }}
               className="rounded border border-border bg-background px-2 py-0.5 font-mono text-xs text-white"
             />
           </div>
@@ -334,7 +345,10 @@ export function SpectralAnalysisView() {
             error={errors["laterRed"] ?? null}
             loading={loadingSlot === "laterRed"}
             onFileSelect={(f) => handleFileUpload("laterRed", f)}
-            onRemove={() => setLaterRed(null)}
+            onRemove={() => {
+              setLaterRed(null);
+              setResult(null);
+            }}
           />
           <SpectralUploadCard
             label="Comparison Near-Infrared Band"
@@ -344,7 +358,10 @@ export function SpectralAnalysisView() {
             error={errors["laterNir"] ?? null}
             loading={loadingSlot === "laterNir"}
             onFileSelect={(f) => handleFileUpload("laterNir", f)}
-            onRemove={() => setLaterNir(null)}
+            onRemove={() => {
+              setLaterNir(null);
+              setResult(null);
+            }}
           />
         </div>
       </section>
